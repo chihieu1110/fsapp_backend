@@ -1,28 +1,48 @@
 import express from "express";
-import { mapOrder } from "~/utils/sorts.js";
+import cors from "cors";
+import { CONNECT_DB, CLOSE_DB } from "~/config/mongodb";
+import AsyncExitHook from "async-exit-hook";
+import { env } from "./config/environment";
+import { APIs_V1 } from "./routes/v1";
+import { errorHandlingMiddleware } from "./middlewares/errorHandlingMiddleware";
+import { corsOptions } from "./config/cors";
 
-const app = express();
+const START_SERVER = () => {
+  const app = express();
+  //xu ly cors
+  app.use(cors(corsOptions));
+  app.use(express.json());
+  app.use('/v1', APIs_V1);
 
-const hostname = "localhost";
-const port = 3007;
+  app.use(errorHandlingMiddleware);
 
-app.get("/", (req, res) => {
-  console.log(
-    mapOrder(
-      [
-        { id: "id-1", name: "One" },
-        { id: "id-2", name: "Two" },
-        { id: "id-3", name: "Three" },
-        { id: "id-4", name: "Four" },
-        { id: "id-5", name: "Five" },
-      ],
-      ["id-5", "id-4", "id-2", "id-3", "id-1"],
-      "id"
-    )
-  );
-  res.end("<h1>Hello World!</h1><hr>");
-});
+  app.listen(env.APP_PORT, env.APP_HOST, () => {
+    console.log(
+      `Hi ${env.AUTHOR},Server is running at http://${env.APP_HOST}:${env.APP_PORT}`
+    );
+  });
+  AsyncExitHook(() => {
+    console.log("closing db");
+    CLOSE_DB();
+    console.log("closed db");
+  });
+};
 
-app.listen(port, hostname, () => {
-  console.log(`Server is running at http://${hostname}:${port}`);
-});
+(async () => {
+  try {
+    await CONNECT_DB();
+    START_SERVER();
+  } catch (error) {
+    console.error("Error starting the server", error);
+    process.exit(0);
+  }
+})();
+// CONNECT_DB()
+//   .then(() => {
+//     console.log("Connected to MongoDB");
+//   })
+//   .then(START_SERVER())
+//   .catch((error) => {
+//     console.error("Error starting the server", error);
+//     process.exit(0);
+//   });
