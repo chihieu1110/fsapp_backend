@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { ObjectId, ReturnDocument } from "mongodb";
+import { ObjectId } from "mongodb";
 import { GET_DB } from "~/config/mongodb";
 import { BOARD_TYPES } from "~/utils/constants";
 import { OBJECT_ID_RULE, OBJECT_ID_RULE_MESSAGE } from "~/utils/validators";
@@ -20,6 +20,9 @@ const BOARD_SCHEMA = Joi.object({
   updatedAt: Joi.date().timestamp("javascript").default(null),
   _isDeleted: Joi.boolean().default(false),
 });
+
+const INVALID_UPDATE_FIELDS = ["id", "createdAt"];
+
 const validateDataBeforeCreate = async (data) => {
   return await BOARD_SCHEMA.validateAsync(data, { abortEarly: false });
 };
@@ -39,7 +42,7 @@ const findOneById = async (id) => {
     console.log(id);
     const idTest = new ObjectId(String(id));
     console.log(idTest);
-    const result = await GET_DB().collection(BOARD_COLLECTION_NAME).findOne({
+    const result = await GET_DB().collection(BOARD_COLLECTION_NAME).findOneAndUpdate({
       _id: idTest,
     });
     return result;
@@ -105,7 +108,37 @@ const pushColumnOrderIds = async (column) => {
           returnDocument: "after",
         }
       );
-    return result.value 
+    return result;
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+const update = async (boardId, updateData) => {
+  try {
+    const boardIdTested = new ObjectId(String(boardId));
+    Object.keys(updateData).forEach((fieldName) => {
+      if (INVALID_UPDATE_FIELDS.includes(fieldName)) {
+        delete updateData[fieldName];
+      }
+    })
+    if (updateData.columnOrderIds) {
+      updateData.columnOrderIds = updateData.columnOrderIds.map(_id => new ObjectId(String(_id)));
+    }
+    const result = await GET_DB()
+      .collection(BOARD_COLLECTION_NAME)
+      .findOneAndUpdate(
+        {
+          _id: boardIdTested,
+        },
+        {
+          $set: updateData,
+        },
+        {
+          returnDocument: 'after',
+        }
+      );
+
+    return result;
   } catch (error) {
     throw new Error(error);
   }
@@ -117,4 +150,5 @@ export const boardModel = {
   findOneById,
   getDetails,
   pushColumnOrderIds,
+  update,
 };

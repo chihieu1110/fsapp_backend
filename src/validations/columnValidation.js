@@ -21,7 +21,30 @@ const createNew = async (req, res, next) => {
     );
   }
 };
-
+const update = async (req, res, next) => {
+  const correctJoi = Joi.object({
+    // boardId: Joi.string()
+    //   .pattern(OBJECT_ID_RULE)
+    //   .message(OBJECT_ID_RULE_MESSAGE),
+    title: Joi.string().min(3).max(50).trim().strict(),
+    cardOrderIds: Joi.array().items(
+      Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE)
+    ),
+  });
+  try {
+    await correctJoi.validateAsync(req.body, {
+      abortEarly: false,
+      allowUnknown: true,
+    });
+    //data validate
+    next();
+  } catch (error) {
+    next(
+      new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, new Error(error).message)
+    );
+  }
+};
 export const columnValidation = {
   createNew,
+  update,
 };

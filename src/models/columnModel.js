@@ -20,6 +20,7 @@ const COLUMN_COLLECTION_SCHEMA = Joi.object({
   updatedAt: Joi.date().timestamp("javascript").default(null),
   _isDeleted: Joi.boolean().default(false),
 });
+const INVALID_UPDATE_FIELDS = ["id","boardId", "createdAt"];
 
 const validateDataBeforeCreate = async (data) => {
   return await COLUMN_COLLECTION_SCHEMA.validateAsync(data, {
@@ -77,7 +78,39 @@ const pushCardOrderIds = async (card) => {
           returnDocument: "after",
         }
       );
-    return result.value 
+    return result 
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+const update = async (columnId, updateData) => {
+  try {
+    const columnIdTested = new ObjectId(String(columnId));
+    Object.keys(updateData).forEach((fieldName) => {
+      if (INVALID_UPDATE_FIELDS.includes(fieldName)) {
+        delete updateData[fieldName];
+      }
+    })
+    if (updateData.cardOrderIds) {
+      updateData.cardOrderIds = updateData.cardOrderIds.map(_id => new ObjectId(String(_id)));
+    }
+    
+    
+      
+    const result = await GET_DB()
+      .collection(COLUMN_COLLECTION_NAME)
+      .findOneAndUpdate(
+        {
+          _id: columnIdTested,
+        },
+        {
+          $set: updateData,
+        },
+        {
+          returnDocument: 'after',
+        }
+      );
+    return result;
   } catch (error) {
     throw new Error(error);
   }
@@ -88,4 +121,5 @@ export const columnModel = {
   createNew,
   findOneById,
   pushCardOrderIds,
+  update
 };

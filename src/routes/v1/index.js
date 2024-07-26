@@ -1,7 +1,7 @@
 import express from "express";
 import { StatusCodes } from "http-status-codes";
 import { boardRoute } from "~/routes/v1/boardRoute";
-import { columnRoutes } from "~/routes/v1/columnRoute";
+import { columnRoute } from "~/routes/v1/columnRoute";
 import { cardRoutes } from "~/routes/v1/cardRoute";
 
 const Router = express.Router();
@@ -10,7 +10,7 @@ Router.get("/status", (req, res) => {
 });
 
 Router.use("/boards", boardRoute);
-Router.use("/columns", columnRoutes);
+Router.use("/columns", columnRoute);
 Router.use("/cards", cardRoutes);
 
 export const APIs_V1 = Router;
