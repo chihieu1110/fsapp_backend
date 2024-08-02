@@ -16,11 +16,20 @@ const START_SERVER = () => {
 
   app.use(errorHandlingMiddleware);
 
-  app.listen(env.APP_PORT, env.APP_HOST, () => {
-    console.log(
-      `Hi ${env.AUTHOR},Server is running at http://${env.APP_HOST}:${env.APP_PORT}`
-    );
-  });
+  if (env.BUILD_MODE === 'production') {
+    app.listen(process.env.PORT, () => {
+      console.log(
+        `Hi Production ${env.AUTHOR},Server is running at ${process.env.PORT}`
+      );
+    });
+  }else {
+    app.listen(env.APP_PORT, env.APP_HOST, () => {
+      console.log(
+        `Hi Local ${env.AUTHOR},Server is running at http://${env.APP_HOST}:${env.APP_PORT}`
+      );
+    });
+  }
+ 
   AsyncExitHook(() => {
     console.log("closing db");
     CLOSE_DB();
