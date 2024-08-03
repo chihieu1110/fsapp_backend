@@ -12,24 +12,24 @@ const START_SERVER = () => {
   //xu ly cors
   app.use(cors(corsOptions));
   app.use(express.json());
-  app.use('/v1', APIs_V1);
+  app.use("/v1", APIs_V1);
 
   app.use(errorHandlingMiddleware);
 
-  if (env.BUILD_MODE === 'production') {
+  if (env.BUILD_MODE === "production") {
     app.listen(process.env.PORT, () => {
       console.log(
         `Hi Production ${env.AUTHOR},Server is running at ${process.env.PORT}`
       );
     });
-  }else {
-    app.listen(env.APP_PORT, env.APP_HOST, () => {
+  } else {
+    app.listen(env.LOCAL_DEV_APP_PORT, env.LOCAL_DEV_APP_HOST, () => {
       console.log(
-        `Hi Local ${env.AUTHOR},Server is running at http://${env.APP_HOST}:${env.APP_PORT}`
+        `Hi Local ${env.AUTHOR},Server is running at http://${env.LOCAL_DEV_APP_HOST}:${env.LOCAL_DEV_APP_PORT}`
       );
     });
   }
- 
+
   AsyncExitHook(() => {
     console.log("closing db");
     CLOSE_DB();
